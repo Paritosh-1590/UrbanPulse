@@ -1,0 +1,12 @@
+{
+  "name": "urbanpulse",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "npm run dev --workspace client",
+    "build": "npm run build --workspace client",
+    "preview": "npm run preview --workspace client"
+  },
+  "workspaces": ["client"]
+}

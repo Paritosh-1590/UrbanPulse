@@ -1,0 +1,14 @@
+node_modules/
+client/node_modules/
+client/dist/
+server/node_modules/
+server/.env
+client/.env
+ml-service/.venv/
+ml-service/__pycache__/
+ml-service/**/*.pyc
+.DS_Store
+.vscode/
+.idea/
+uploads/
+*.log
