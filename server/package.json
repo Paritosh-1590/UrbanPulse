@@ -1,15 +1,16 @@
 {
-  "name": "server",
+  "name": "urbanpulse-server",
   "version": "1.0.0",
-  "description": "Backend implementation is pending.",
-  "main": "index.js",
+  "private": true,
+  "type": "commonjs",
+  "description": "UrbanPulse Express and MongoDB API",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "seed:admin": "node scripts/create-admin.js",
+    "test": "node --test"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "dotenv": "^18.0.9",
     "express": "^5.3.0",

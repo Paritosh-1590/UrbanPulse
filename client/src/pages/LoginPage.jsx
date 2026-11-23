@@ -1,16 +1,50 @@
-import { ArrowLeft, ArrowRight, Eye, EyeOff, LockKeyhole, Mail } from 'lucide-react'
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import Brand from '../components/Brand.jsx'
+import { useEffect, useState } from 'react';
+import { ArrowLeft, ArrowRight, Eye, EyeOff, LockKeyhole, Mail, UserRound } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import Brand from '../components/Brand.jsx';
+import { useAuth } from '../auth/AuthContext.jsx';
 
-export default function LoginPage() {
-  const [showPassword, setShowPassword] = useState(false)
-  const [role, setRole] = useState('citizen')
-  const [notice, setNotice] = useState('')
+export default function LoginPage({ initialMode = 'login' }) {
+  const [mode, setMode] = useState(initialMode);
+  const [showPassword, setShowPassword] = useState(false);
+  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  const { login, register, user, loading } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  function handleSubmit(event) {
-    event.preventDefault()
-    setNotice('Authentication is not connected yet. This screen is a UI prototype; do not use real credentials.')
+  useEffect(() => {
+    setMode(location.pathname === '/register' ? 'register' : 'login');
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!loading && user) navigate(user.role === 'citizen' ? '/citizen' : '/admin', { replace: true });
+  }, [loading, user, navigate]);
+
+  if (!loading && user) return null;
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    setError('');
+    setBusy(true);
+    try {
+      const signedInUser = mode === 'register'
+        ? await register(form.name, form.email, form.password)
+        : await login(form.email, form.password);
+      const fallback = signedInUser.role === 'citizen' ? '/citizen' : '/admin';
+      navigate(location.state?.from || fallback, { replace: true });
+    } catch (submitError) {
+      setError(submitError.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function changeMode(nextMode) {
+    setMode(nextMode);
+    setError('');
+    navigate(nextMode === 'register' ? '/register' : '/login', { replace: true });
   }
 
   return (
@@ -29,24 +63,25 @@ export default function LoginPage() {
         <div className="auth-mobile-brand"><Brand /></div>
         <div className="auth-form-wrap">
           <span className="form-overline">WELCOME TO URBANPULSE</span>
-          <h2>Sign in to continue.</h2>
-          <p className="form-intro">Choose the workspace you want to access.</p>
-          <div className="role-switch" role="group" aria-label="Account type">
-            <button type="button" className={role === 'citizen' ? 'role-active' : ''} onClick={() => setRole('citizen')}>Citizen</button>
-            <button type="button" className={role === 'admin' ? 'role-active' : ''} onClick={() => setRole('admin')}>Department admin</button>
+          <h2>{mode === 'register' ? 'Create your account.' : 'Sign in to continue.'}</h2>
+          <p className="form-intro">{mode === 'register' ? 'Citizen accounts can report and track local issues.' : 'Use your account to open your workspace.'}</p>
+          <div className="role-switch auth-mode-switch" role="group" aria-label="Authentication mode">
+            <button type="button" className={mode === 'login' ? 'role-active' : ''} onClick={() => changeMode('login')}>Sign in</button>
+            <button type="button" className={mode === 'register' ? 'role-active' : ''} onClick={() => changeMode('register')}>Create account</button>
           </div>
           <form onSubmit={handleSubmit}>
+            {mode === 'register' && <><label htmlFor="name">Full name</label><div className="input-wrap"><UserRound size={17} /><input id="name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="Your name" autoComplete="name" minLength={2} maxLength={80} required /></div></>}
             <label htmlFor="email">Email address</label>
-            <div className="input-wrap"><Mail size={17} /><input id="email" type="email" placeholder="you@example.com" autoComplete="email" required /></div>
-            <div className="password-label"><label htmlFor="password">Password</label><a href="#forgot" onClick={(e) => { e.preventDefault(); setNotice('Password recovery will be added with backend authentication.') }}>Forgot password?</a></div>
-            <div className="input-wrap"><LockKeyhole size={17} /><input id="password" type={showPassword ? 'text' : 'password'} placeholder="Enter your password" autoComplete="current-password" required /><button className="password-toggle" type="button" aria-label={showPassword ? 'Hide password' : 'Show password'} onClick={() => setShowPassword(!showPassword)}>{showPassword ? <EyeOff size={17} /> : <Eye size={17} />}</button></div>
-            <button className="button button-dark auth-submit" type="submit">Continue as {role === 'citizen' ? 'citizen' : 'admin'} <ArrowRight size={16} /></button>
+            <div className="input-wrap"><Mail size={17} /><input id="email" type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} placeholder="you@example.com" autoComplete="email" required /></div>
+            <div className="password-label"><label htmlFor="password">Password</label>{mode === 'login' && <span>Use your registered password</span>}</div>
+            <div className="input-wrap"><LockKeyhole size={17} /><input id="password" type={showPassword ? 'text' : 'password'} value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} placeholder={mode === 'register' ? 'At least 8 characters' : 'Enter your password'} autoComplete={mode === 'register' ? 'new-password' : 'current-password'} minLength={8} required /><button className="password-toggle" type="button" aria-label={showPassword ? 'Hide password' : 'Show password'} onClick={() => setShowPassword(!showPassword)}>{showPassword ? <EyeOff size={17} /> : <Eye size={17} />}</button></div>
+            <button className="button button-dark auth-submit" type="submit" disabled={busy}>{busy ? 'Please wait…' : mode === 'register' ? 'Create citizen account' : 'Sign in'} <ArrowRight size={16} /></button>
           </form>
-          {notice && <div className="form-notice" role="status">{notice}</div>}
-          <div className="auth-footnote">Prototype only — do not enter real credentials.</div>
+          {error && <div className="form-notice form-notice--error" role="alert">{error}</div>}
+          <div className="auth-footnote">Administrator accounts are provisioned by the project administrator. New registrations receive citizen access.</div>
         </div>
         <div className="auth-bottom-note">UrbanPulse is an academic prototype for civic issue reporting.</div>
       </section>
     </main>
-  )
+  );
 }

@@ -12,3 +12,10 @@ ml-service/**/*.pyc
 .idea/
 uploads/
 *.log
+ml-service/artifacts/
+.env
+.env.*.local
+# Local environment files; retain example templates
+.env*
+!.env.example
+!**/.env.example

@@ -1,71 +1,46 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Outlet, Route, Routes } from 'react-router-dom';
+import LandingPage from './pages/LandingPage.jsx';
+import LoginPage from './pages/LoginPage.jsx';
+import CitizenSidebar from './components/CitizenSidebar.jsx';
+import ProtectedRoute from './components/ProtectedRoute.jsx';
+import CitizenDashboard from './pages/citizen/CitizenDashboard.jsx';
+import NewComplaint from './pages/citizen/NewComplaint.jsx';
+import MyComplaints from './pages/citizen/MyComplaints.jsx';
+import ComplaintDetails from './pages/citizen/ComplaintDetails.jsx';
+import AdminDashboard from './pages/admin/AdminDashboard.jsx';
+import AdminComplaintDetails from './pages/admin/AdminComplaintDetails.jsx';
+import './pages/citizen/citizen.css';
+import './pages/admin/admin.css';
 
-import LandingPage from './pages/LandingPage.jsx'
-import LoginPage from './pages/LoginPage.jsx'
-import './pages/citizen/citizen.css'
-import CitizenSidebar from './components/CitizenSidebar.jsx'
-import CitizenDashboard from './pages/citizen/CitizenDashboard.jsx'
-import NewComplaint from './pages/citizen/NewComplaint.jsx'
-import MyComplaints from './pages/citizen/MyComplaints.jsx'
-import ComplaintDetails from './pages/citizen/ComplaintDetails.jsx'
-
-function CitizenLayout({ children }) {
+function WorkspaceLayout({ admin = false }) {
   return (
     <div className="citizen-layout">
-      <CitizenSidebar />
-      <div className="citizen-layout__content">
-        {children}
-      </div>
+      <CitizenSidebar admin={admin} />
+      <div className="citizen-layout__content"><Outlet /></div>
     </div>
-  )
+  );
 }
 
 export default function App() {
   return (
     <Routes>
-      {/* Existing pages */}
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<LoginPage initialMode="register" />} />
 
-      {/* Citizen pages */}
-      <Route
-        path="/citizen"
-        element={
-          <CitizenLayout>
-            <CitizenDashboard />
-          </CitizenLayout>
-        }
-      />
+      <Route path="/citizen" element={<ProtectedRoute roles={['citizen']}><WorkspaceLayout /></ProtectedRoute>}>
+        <Route index element={<CitizenDashboard />} />
+        <Route path="complaints/new" element={<NewComplaint />} />
+        <Route path="complaints" element={<MyComplaints />} />
+        <Route path="complaints/:id" element={<ComplaintDetails />} />
+      </Route>
 
-      <Route
-        path="/citizen/complaints/new"
-        element={
-          <CitizenLayout>
-            <NewComplaint />
-          </CitizenLayout>
-        }
-      />
+      <Route path="/admin" element={<ProtectedRoute roles={['admin', 'department_official']}><WorkspaceLayout admin /></ProtectedRoute>}>
+        <Route index element={<AdminDashboard />} />
+        <Route path="complaints/:id" element={<AdminComplaintDetails />} />
+      </Route>
 
-      <Route
-        path="/citizen/complaints"
-        element={
-          <CitizenLayout>
-            <MyComplaints />
-          </CitizenLayout>
-        }
-      />
-
-      <Route
-        path="/citizen/complaints/:id"
-        element={
-          <CitizenLayout>
-            <ComplaintDetails />
-          </CitizenLayout>
-        }
-      />
-
-      {/* Unknown URLs return to the landing page */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
-  )
+  );
 }

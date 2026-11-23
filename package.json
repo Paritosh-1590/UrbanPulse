@@ -6,7 +6,13 @@
   "scripts": {
     "dev": "npm run dev --workspace client",
     "build": "npm run build --workspace client",
-    "preview": "npm run preview --workspace client"
+    "preview": "npm run preview --workspace client",
+    "server:dev": "npm run dev --prefix server",
+    "server:start": "npm start --prefix server",
+    "server:seed:admin": "npm run seed:admin --prefix server",
+    "test:server": "npm test --prefix server"
   },
-  "workspaces": ["client"]
+  "workspaces": [
+    "client"
+  ]
 }

@@ -1,36 +1,21 @@
-# UrbanPulse Development Roadmap
+# UrbanPulse next steps
 
-## Initial ownership
+## Completed in the current implementation
 
-- **Paritosh:** initial application foundation, shared visual conventions, admin workflow and later ML integration.
-- **Shekhar:** citizen workflow, complaint submission and tracking UI.
-- **Yug:** Express backend, authentication, MongoDB models, complaint APIs and SLA logic.
+- React citizen workflow connected to the Express API.
+- MongoDB user and complaint models.
+- Citizen registration/login and JWT-based role checks.
+- Admin queue, assignment, department-user provisioning and status lifecycle.
+- Complaint status history and category/priority-based SLA deadlines.
+- Admin-read-triggered overdue escalation.
+- Python TF-IDF + Logistic Regression category suggestion with keyword fallback.
 
-Ownership is by module/file area. Discuss shared-file changes before editing.
+## Recommended improvements after the mini-project submission
 
-## Git workflow
-
-1. `main` should remain runnable.
-2. Create one feature branch per task.
-3. Pull the latest `main` before creating a branch.
-4. Make small, focused commits.
-5. Open a pull request and request a teammate review.
-6. Do not commit secrets, `.env` files, `node_modules`, Python virtual environments or private uploads.
-
-## First evaluation milestone
-
-- React frontend starts and builds.
-- Landing and login pages are present.
-- Backend and ML service directories and integration contracts are documented.
-- Each teammate contributes a meaningful commit.
-- README accurately describes what is implemented versus planned.
-
-## Next implementation sequence
-
-1. Agree on data model and API request/response schemas.
-2. Implement backend health check and MongoDB configuration.
-3. Implement authentication and complaint APIs.
-4. Build citizen and admin workflows against agreed contracts.
-5. Train and integrate the text classifier.
-6. Add image consistency checks, SLA escalation and map visualization.
-7. Run end-to-end tests and prepare the demo.
+1. Add automated integration tests using a disposable MongoDB instance or Testcontainers.
+2. Replace synthetic ML examples with a representative, licensed dataset; evaluate per-class precision/recall and confusion matrix on held-out reports.
+3. Add image upload with file type/size validation and safe object storage.
+4. Add map coordinates and geocoding with a privacy-aware location flow.
+5. Move authentication to Secure, HttpOnly, SameSite cookies; add CSRF protection, token rotation and account recovery.
+6. Move SLA evaluation to a scheduled worker and introduce an explicit notification provider only after credentials and consent requirements are defined.
+7. Add pagination controls, stronger audit logging and deployment configuration.

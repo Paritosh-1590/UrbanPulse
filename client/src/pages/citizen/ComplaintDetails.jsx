@@ -1,223 +1,46 @@
-import { Link, useParams } from "react-router-dom";
-import {
-  ArrowLeft,
-  MapPin,
-  CalendarDays,
-  Clock3,
-  FileText,
-  CheckCircle2,
-  Circle,
-} from "lucide-react";
-import StatusBadge from "../../components/StatusBadge.jsx";
+import { useEffect, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { ArrowLeft, MapPin, CalendarDays, Clock3, FileText, CheckCircle2, Circle, AlertTriangle } from 'lucide-react';
+import StatusBadge from '../../components/StatusBadge.jsx';
+import { apiRequest } from '../../lib/api.js';
 
-const sampleComplaints = {
-  "UP-1024": {
-    id: "UP-1024",
-    title: "Streetlight not working",
-    category: "Electricity",
-    location: "Main Road",
-    description:
-      "The streetlight near the main road crossing has not been working for several days, making the area difficult to navigate at night.",
-    date: "20 Oct 2026",
-    status: "In Progress",
-    slaDeadline: "23 Oct 2026",
-    history: [
-      {
-        title: "Complaint submitted",
-        date: "20 Oct 2026",
-        description: "The complaint was received.",
-        complete: true,
-      },
-      {
-        title: "Complaint reviewed",
-        date: "20 Oct 2026",
-        description: "The issue was reviewed by the relevant team.",
-        complete: true,
-      },
-      {
-        title: "Work in progress",
-        date: "21 Oct 2026",
-        description: "The complaint is being worked on.",
-        complete: true,
-      },
-      {
-        title: "Issue resolved",
-        date: "Pending",
-        description: "Awaiting resolution confirmation.",
-        complete: false,
-      },
-    ],
-  },
-  "UP-1023": {
-    id: "UP-1023",
-    title: "Garbage collection missed",
-    category: "Sanitation",
-    location: "Sector 4",
-    description: "Scheduled garbage collection was missed in this area.",
-    date: "19 Oct 2026",
-    status: "Submitted",
-    slaDeadline: "Not available",
-    history: [
-      {
-        title: "Complaint submitted",
-        date: "19 Oct 2026",
-        description: "The complaint was received.",
-        complete: true,
-      },
-    ],
-  },
-  "UP-1022": {
-    id: "UP-1022",
-    title: "Pothole on main road",
-    category: "Roads",
-    location: "Market Street",
-    description: "A pothole is affecting traffic on Market Street.",
-    date: "17 Oct 2026",
-    status: "Resolved",
-    slaDeadline: "Not available",
-    history: [
-      {
-        title: "Complaint submitted",
-        date: "17 Oct 2026",
-        description: "The complaint was received.",
-        complete: true,
-      },
-      {
-        title: "Issue resolved",
-        date: "18 Oct 2026",
-        description: "Marked resolved in the sample record.",
-        complete: true,
-      },
-    ],
-  },
-};
+const formatDate = (value) => value ? new Date(value).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
 
 export default function ComplaintDetails() {
   const { id } = useParams();
-  const complaint = sampleComplaints[id];
+  const [complaint, setComplaint] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  if (!complaint) {
-    return (
-      <main className="citizen-details-page">
-        <Link to="/citizen/complaints" className="citizen-back-link">
-          <ArrowLeft size={17} />
-          Back to My Complaints
-        </Link>
-        <section className="citizen-form-card">
-          <h1>Complaint not found</h1>
-          <p>
-            This ID does not exist in the current sample records. Real complaint
-            lookup will be connected to the backend later.
-          </p>
-        </section>
-      </main>
-    );
-  }
+  useEffect(() => {
+    let active = true;
+    apiRequest(`/complaints/${encodeURIComponent(id)}`)
+      .then((result) => { if (active) setComplaint(result.complaint); })
+      .catch((requestError) => { if (active) setError(requestError.message); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [id]);
 
+  if (loading) return <main className="citizen-details-page"><div className="citizen-loading">Loading complaint…</div></main>;
+  if (error || !complaint) return <main className="citizen-details-page"><Link to="/citizen/complaints" className="citizen-back-link"><ArrowLeft size={17} />Back to My Complaints</Link><section className="citizen-form-card"><h1>Unable to load complaint</h1><p>{error || 'This complaint could not be found.'}</p></section></main>;
+
+  const timeline = [...(complaint.history || [])].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
   return (
     <main className="citizen-details-page">
-      <Link to="/citizen/complaints" className="citizen-back-link">
-        <ArrowLeft size={17} />
-        Back to My Complaints
-      </Link>
-
-      <header className="citizen-details-header">
-        <div>
-          <p className="citizen-dashboard__eyebrow">COMPLAINT {complaint.id}</p>
-          <h1>{complaint.title}</h1>
-          <p>Submitted on {complaint.date}</p>
-        </div>
-        <StatusBadge status={complaint.status} />
-      </header>
-
+      <Link to="/citizen/complaints" className="citizen-back-link"><ArrowLeft size={17} />Back to My Complaints</Link>
+      <header className="citizen-details-header"><div><p className="citizen-dashboard__eyebrow">COMPLAINT {complaint.complaintId}</p><h1>{complaint.title}</h1><p>Submitted on {formatDate(complaint.createdAt)}</p></div><StatusBadge status={complaint.status} /></header>
+      {complaint.isOverdue && <div className="citizen-alert citizen-alert--warning"><AlertTriangle size={17} />This complaint has passed its target resolution date and is flagged for administrator attention.</div>}
       <div className="citizen-details-grid">
-        <section className="citizen-form-card">
-          <div className="citizen-form-card__heading">
-            <h2>Complaint Information</h2>
-            <p>Details provided with this report.</p>
-          </div>
-
-          <div className="citizen-detail-item">
-            <FileText size={19} />
-            <div>
-              <span>Category</span>
-              <strong>{complaint.category}</strong>
-            </div>
-          </div>
-
-          <div className="citizen-detail-item">
-            <MapPin size={19} />
-            <div>
-              <span>Location</span>
-              <strong>{complaint.location}</strong>
-            </div>
-          </div>
-
-          <div className="citizen-detail-item">
-            <CalendarDays size={19} />
-            <div>
-              <span>Date submitted</span>
-              <strong>{complaint.date}</strong>
-            </div>
-          </div>
-
-          <div className="citizen-details-description">
-            <h3>Description</h3>
-            <p>{complaint.description}</p>
-          </div>
+        <section className="citizen-form-card"><div className="citizen-form-card__heading"><h2>Complaint Information</h2><p>Details submitted with this report.</p></div>
+          <div className="citizen-detail-item"><FileText size={19} /><div><span>Category</span><strong>{complaint.category}</strong></div></div>
+          <div className="citizen-detail-item"><MapPin size={19} /><div><span>Location</span><strong>{complaint.location}</strong></div></div>
+          <div className="citizen-detail-item"><CalendarDays size={19} /><div><span>Date submitted</span><strong>{formatDate(complaint.createdAt)}</strong></div></div>
+          {complaint.assignedDepartment && <div className="citizen-detail-item"><FileText size={19} /><div><span>Assigned department</span><strong>{complaint.assignedDepartment}</strong></div></div>}
+          <div className="citizen-details-description"><h3>Description</h3><p>{complaint.description}</p></div>
         </section>
-
-        <aside className="citizen-form-card citizen-sla-card">
-          <div className="citizen-form-card__heading">
-            <h2>Resolution target</h2>
-            <p>Sample SLA information</p>
-          </div>
-
-          <div className="citizen-sla-card__deadline">
-            <Clock3 size={21} />
-            <div>
-              <span>Target deadline</span>
-              <strong>{complaint.slaDeadline}</strong>
-            </div>
-          </div>
-
-          <p className="citizen-form-hint">
-            This is placeholder information, not a live SLA calculation.
-          </p>
-        </aside>
+        <aside className="citizen-form-card citizen-sla-card"><div className="citizen-form-card__heading"><h2>Resolution target</h2><p>Deadline set at submission</p></div><div className="citizen-sla-card__deadline"><Clock3 size={21} /><div><span>Target deadline</span><strong>{formatDate(complaint.slaDeadline)}</strong></div></div><p className="citizen-form-hint">Priority: <strong>{complaint.priority}</strong>. The deadline is a project rule, not a guarantee from a municipal authority.</p></aside>
       </div>
-
-      <section className="citizen-form-card citizen-history">
-        <div className="citizen-form-card__heading">
-          <h2>Status History</h2>
-          <p>Sample timeline for this complaint.</p>
-        </div>
-
-        <ol className="citizen-history__list">
-          {complaint.history.map((item, index) => {
-            const Icon = item.complete ? CheckCircle2 : Circle;
-
-            return (
-              <li
-                className={`citizen-history__item ${
-                  item.complete ? "is-complete" : ""
-                }`}
-                key={`${item.title}-${index}`}
-              >
-                <Icon size={21} aria-hidden="true" />
-
-                <div>
-                  <div className="citizen-history__heading">
-                    <h3>{item.title}</h3>
-                    <span>{item.date}</span>
-                  </div>
-                  <p>{item.description}</p>
-                </div>
-              </li>
-            );
-          })}
-        </ol>
-      </section>
+      <section className="citizen-form-card citizen-history"><div className="citizen-form-card__heading"><h2>Status History</h2><p>Recorded actions on this complaint.</p></div>{timeline.length ? <ol className="citizen-history__list">{timeline.map((item, index) => { const isLast = index === timeline.length - 1; const Icon = isLast ? CheckCircle2 : Circle; return <li className={`citizen-history__item ${isLast ? 'is-complete' : ''}`} key={`${item.action}-${item.createdAt}-${index}`}><Icon size={21} aria-hidden="true" /><div><div className="citizen-history__heading"><h3>{item.action}</h3><span>{formatDate(item.createdAt)}</span></div><p>{item.note || `Updated by ${item.changedByName || 'system'}.`}</p></div></li>; })}</ol> : <p>No history recorded.</p>}</section>
     </main>
   );
 }

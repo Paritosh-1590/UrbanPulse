@@ -1,33 +1,43 @@
-# Initial API Contract
+# UrbanPulse API contract
 
-This document is a starting agreement for frontend/backend work. It is not a claim that the endpoints are implemented.
+API prefix: `/api`. Ordinary request and response bodies are JSON. Successful responses are `{ "success": true, "data": ... }`; errors are `{ "success": false, "message": "..." }`.
 
-## Conventions
+Protected endpoints require `Authorization: Bearer <JWT>`. The JWT identifies the account; authorization is resolved from the user record in MongoDB on each request. A role or user ID in a frontend request is never used as authority.
 
-- API prefix: `/api`
-- JSON for ordinary request/response bodies.
-- Use HTTP status codes appropriately.
-- Authenticated routes will use a bearer JWT.
-- Never trust role, department, urgency or ownership values supplied by the client without server-side validation.
+| Method | Endpoint | Access | Implemented behaviour |
+|---|---|---|---|
+| GET | `/health` | Public | API and MongoDB status |
+| POST | `/auth/register` | Public | Creates a citizen account |
+| POST | `/auth/login` | Public | Issues a signed token |
+| GET | `/auth/me` | Authenticated | Returns current user |
+| POST | `/ai/classify` | Citizen | Calls Flask model or keyword fallback |
+| POST | `/complaints` | Citizen | Validates and persists complaint |
+| GET | `/complaints` | Authenticated | Citizens see their own; officials see their department; admins see all |
+| GET | `/complaints/summary` | Authenticated | Counts visible complaints |
+| GET | `/complaints/:id` | Authenticated | Returns record and activity history after permission check |
+| GET | `/admin/departments` | Admin/official | Static project department list |
+| GET | `/admin/summary` | Admin/official | Counts queue items and evaluates overdue SLA cases |
+| GET | `/admin/complaints` | Admin/official | Queue with search and filters |
+| PATCH | `/admin/complaints/:id/assign` | Admin | Sets department and optional official |
+| PATCH | `/admin/complaints/:id/status` | Admin/assigned official | Enforces status transitions and department scope |
+| GET | `/admin/department-officials` | Admin | Lists provisioned staff |
+| POST | `/admin/department-officials` | Admin | Creates a department account |
 
-## Planned endpoints
+## Complaint fields
 
-| Method | Endpoint | Purpose |
-|---|---|---|
-| POST | `/api/auth/register` | Citizen registration |
-| POST | `/api/auth/login` | Login and token issuance |
-| GET | `/api/complaints` | List complaints visible to current user |
-| POST | `/api/complaints` | Submit a complaint |
-| GET | `/api/complaints/:id` | Read complaint and history |
-| PATCH | `/api/complaints/:id/status` | Authorized status update |
-| GET | `/api/admin/complaints` | Admin complaint queue |
-| GET | `/api/admin/summary` | Admin summary metrics |
-| GET | `/api/admin/complaints/map` | Map-ready complaint locations |
+Complaint documents include `complaintId`, `title`, `description`, `category`, `location`, `citizen`, `assignedDepartment`, `assignedTo`, `status`, `priority`, `slaDeadline`, `isEscalated`, `escalatedAt`, timestamps and `history`.
 
-## Planned ML service endpoints
+Categories: `Roads`, `Sanitation`, `Water`, `Electricity`, `Drainage`, `Other`. Statuses: `Submitted`, `Assigned`, `In Progress`, `Resolved`, `Rejected`.
 
-- `GET /health`
-- `POST /predict/text`
-- `POST /predict/image-consistency`
+## Status transitions
 
-Exact request and response schemas should be agreed before implementation.
+- Submitted → Assigned, In Progress, Rejected
+- Assigned → In Progress, Rejected
+- In Progress → Resolved, Rejected
+- Resolved and Rejected are terminal in this implementation.
+
+Department officials can move complaints in their own department to `In Progress` or `Resolved`. Only admins can assign complaints or create department users.
+
+## SLA evaluation
+
+SLA targets are assigned at creation by category and a simple priority rule. The admin summary/queue invokes the escalation service, which marks overdue unresolved complaints once and adds a history entry. There is no scheduled worker, notification sender, or automatic email/SMS integration.
