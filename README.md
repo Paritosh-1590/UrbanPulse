@@ -16,10 +16,11 @@ UrbanPulse is a full-stack academic prototype for reporting civic infrastructure
 - Category-based SLA deadlines and lazy overdue escalation. Escalation is evaluated when an administrator opens the queue or summary; it is not a background scheduler and it does not send notifications.
 - A Python text-classification service using TF-IDF and Logistic Regression, trained locally from the small synthetic examples in `ml-service/data/training_data.csv`.
 - A transparent Express keyword-classifier fallback when the optional Python service is not running.
+- Secure complaint evidence uploads: up to 3 JPEG, PNG or WebP files per complaint, with local disk storage and authenticated retrieval.
 
 ## Important limitations
 
-This is a college demonstration project, not a live municipal service. The ML examples are synthetic and small. Model confidence is not a validated accuracy score, and no real-world performance claim is made. The classifier can suggest a category; the citizen still chooses the category submitted with a complaint. There is no live municipal integration, email/SMS notification, geocoding, map, image upload/storage, password reset, refresh-token rotation, or background SLA worker. The frontend stores the short-lived access token in `localStorage`; this is acceptable for a classroom prototype but a production deployment should move to secure, HttpOnly cookies and add CSRF controls.
+This is a college demonstration project, not a live municipal service. The ML examples are synthetic and small. Model confidence is not a validated accuracy score, and no real-world performance claim is made. The classifier can suggest a category; the citizen still chooses the category submitted with a complaint. There is no live municipal integration, email/SMS notification, geocoding, map, password reset, refresh-token rotation, or background SLA worker. Complaint evidence uses local server disk, so deployment requires a persistent volume or object-storage integration. The frontend stores the short-lived access token in `localStorage`; this is acceptable for a classroom prototype but a production deployment should move to secure, HttpOnly cookies and add CSRF controls.
 
 ## Technology stack
 
@@ -93,6 +94,7 @@ JWT_SECRET=put-a-random-secret-here-at-least-32-characters-long
 JWT_TTL_SECONDS=604800
 CLIENT_ORIGIN=http://localhost:5173,http://127.0.0.1:5173
 ML_SERVICE_URL=http://127.0.0.1:8000
+UPLOAD_DIR=uploads/complaints
 ADMIN_NAME=
 ADMIN_EMAIL=
 ADMIN_PASSWORD=

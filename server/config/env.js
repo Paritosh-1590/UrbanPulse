@@ -25,6 +25,7 @@ function validateEnv() {
     tokenTtlSeconds,
     clientOrigins: (process.env.CLIENT_ORIGIN || 'http://localhost:5173,http://127.0.0.1:5173').split(',').map((value) => value.trim()).filter(Boolean),
     mlServiceUrl: (process.env.ML_SERVICE_URL || '').replace(/\/$/, ''),
+    uploadDir: path.resolve(__dirname, '..', process.env.UPLOAD_DIR || 'uploads/complaints'),
   };
 }
 

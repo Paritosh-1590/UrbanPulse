@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, AlertTriangle, CalendarDays, MapPin, UserRound, Save, Clock3 } from 'lucide-react';
 import StatusBadge from '../../components/StatusBadge.jsx';
+import ComplaintEvidence from '../../components/ComplaintEvidence.jsx';
 import { useAuth } from '../../auth/AuthContext.jsx';
 import { apiRequest } from '../../lib/api.js';
 
@@ -105,6 +106,7 @@ export default function AdminComplaintDetails() {
           <section className="citizen-form-card"><div className="citizen-form-card__heading"><h2>Update status</h2><p>{isAdmin ? 'Move the complaint through its permitted workflow.' : 'Update the complaints assigned to your department.'}</p></div>{statusChoices.length ? <form onSubmit={saveStatus} className="admin-action-form"><label>New status<select value={nextStatus} onChange={(event) => setNextStatus(event.target.value)}>{statusChoices.map((value) => <option key={value}>{value}</option>)}</select></label><label>Update note <textarea rows={3} maxLength={500} value={note} onChange={(event) => setNote(event.target.value)} placeholder="Add a brief progress note (optional)" /></label><button disabled={saving || !nextStatus} type="submit" className="citizen-button citizen-button--primary"><Save size={16} />{saving ? 'Saving…' : 'Update status'}</button></form> : <p className="admin-muted">This complaint is closed or must be assigned before your department can update it.</p>}</section>
         </aside>
       </div>
+      <ComplaintEvidence complaintId={complaint._id || complaint.complaintId} images={complaint.images} />
       <section className="citizen-form-card citizen-history"><div className="citizen-form-card__heading"><h2>Activity history</h2><p>Actions recorded by the system and project users.</p></div>{history.length ? <ol className="citizen-history__list">{history.map((item, index) => <li className="citizen-history__item is-complete" key={`${item.action}-${item.createdAt}-${index}`}><Clock3 size={19} /><div><div className="citizen-history__heading"><h3>{item.action}</h3><span>{formatDate(item.createdAt)}</span></div><p>{item.note} {item.changedByName ? `— ${item.changedByName}` : ''}</p></div></li>)}</ol> : <p className="admin-muted">No activity has been recorded.</p>}</section>
     </main>
   );

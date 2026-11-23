@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, MapPin, CalendarDays, Clock3, FileText, CheckCircle2, Circle, AlertTriangle } from 'lucide-react';
 import StatusBadge from '../../components/StatusBadge.jsx';
+import ComplaintEvidence from '../../components/ComplaintEvidence.jsx';
 import { apiRequest } from '../../lib/api.js';
 
 const formatDate = (value) => value ? new Date(value).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
@@ -40,6 +41,7 @@ export default function ComplaintDetails() {
         </section>
         <aside className="citizen-form-card citizen-sla-card"><div className="citizen-form-card__heading"><h2>Resolution target</h2><p>Deadline set at submission</p></div><div className="citizen-sla-card__deadline"><Clock3 size={21} /><div><span>Target deadline</span><strong>{formatDate(complaint.slaDeadline)}</strong></div></div><p className="citizen-form-hint">Priority: <strong>{complaint.priority}</strong>. The deadline is a project rule, not a guarantee from a municipal authority.</p></aside>
       </div>
+      <ComplaintEvidence complaintId={complaint._id || complaint.complaintId} images={complaint.images} />
       <section className="citizen-form-card citizen-history"><div className="citizen-form-card__heading"><h2>Status History</h2><p>Recorded actions on this complaint.</p></div>{timeline.length ? <ol className="citizen-history__list">{timeline.map((item, index) => { const isLast = index === timeline.length - 1; const Icon = isLast ? CheckCircle2 : Circle; return <li className={`citizen-history__item ${isLast ? 'is-complete' : ''}`} key={`${item.action}-${item.createdAt}-${index}`}><Icon size={21} aria-hidden="true" /><div><div className="citizen-history__heading"><h3>{item.action}</h3><span>{formatDate(item.createdAt)}</span></div><p>{item.note || `Updated by ${item.changedByName || 'system'}.`}</p></div></li>; })}</ol> : <p>No history recorded.</p>}</section>
     </main>
   );

@@ -37,3 +37,22 @@ export async function apiRequest(path, options = {}) {
   }
   return payload.data ?? payload;
 }
+
+export async function apiRequestBlob(path) {
+  const token = getToken();
+  const headers = new Headers();
+  if (token) headers.set('Authorization', `Bearer ${token}`);
+
+  let response;
+  try {
+    response = await fetch(`${API_BASE}${path.startsWith('/') ? path : `/${path}`}`, { headers });
+  } catch (_error) {
+    throw new Error('Could not reach the UrbanPulse API. Check that the backend is running.');
+  }
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({}));
+    throw new Error(payload.message || `Request failed (${response.status}).`);
+  }
+  return response.blob();
+}
