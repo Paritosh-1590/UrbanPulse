@@ -40,7 +40,7 @@ def load_training_data() -> tuple[list[str], list[str]]:
 def train_model() -> Pipeline:
     texts, labels = load_training_data()
     pipeline = Pipeline([
-        ("tfidf", TfidfVectorizer(ngram_range=(1, 2), strip_accents="unicode", lowercase=True, sublinear_tf=True)),
+        ("tfidf", TfidfVectorizer(ngram_range=(1, 2), strip_accents="unicode", lowercase=True, stop_words="english", sublinear_tf=True)),
         ("classifier", LogisticRegression(max_iter=1000, class_weight="balanced", random_state=42)),
     ])
     pipeline.fit(texts, labels)
