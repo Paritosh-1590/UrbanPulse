@@ -11,6 +11,15 @@ const historySchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 }, { _id: false });
 
+const complaintImageSchema = new mongoose.Schema({
+  id: { type: String, required: true },
+  storageKey: { type: String, required: true, maxlength: 255 },
+  displayName: { type: String, required: true, maxlength: 180 },
+  mimeType: { type: String, enum: ['image/jpeg', 'image/png', 'image/webp'], required: true },
+  size: { type: Number, required: true, min: 1, max: 5 * 1024 * 1024 },
+  uploadedAt: { type: Date, required: true, default: Date.now },
+}, { _id: false });
+
 const complaintSchema = new mongoose.Schema({
   complaintId: { type: String, unique: true, index: true },
   title: { type: String, required: true, trim: true, minlength: 5, maxlength: 120 },
@@ -18,6 +27,7 @@ const complaintSchema = new mongoose.Schema({
   category: { type: String, enum: CATEGORIES, required: true },
   location: { type: String, required: true, trim: true, maxlength: 200 },
   imageUrl: { type: String, default: null, maxlength: 500 },
+  images: { type: [complaintImageSchema], default: [] },
   citizen: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
   assignedDepartment: { type: String, enum: DEPARTMENTS, default: null, index: true },
   assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },

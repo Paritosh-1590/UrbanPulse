@@ -11,6 +11,7 @@ ml-service/**/*.pyc
 .vscode/
 .idea/
 uploads/
+server/uploads/
 *.log
 ml-service/artifacts/
 .env

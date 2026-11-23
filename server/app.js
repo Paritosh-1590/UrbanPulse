@@ -1,5 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const multer = require('multer');
 const { createAuthMiddleware, allowRoles } = require('./middleware/auth');
 const createAuthRouter = require('./routes/auth');
 const createComplaintsRouter = require('./routes/complaints');
@@ -66,6 +67,16 @@ function createApp(config) {
   app.use('/api', (req, res) => res.status(404).json({ success: false, message: 'API endpoint not found.' }));
   app.use((error, req, res, next) => {
     if (res.headersSent) return next(error);
+    if (error && error instanceof multer.MulterError) {
+      const message = error.code === 'LIMIT_FILE_SIZE'
+        ? 'Each image must be 5 MB or smaller.'
+        : error.code === 'LIMIT_FILE_COUNT'
+          ? 'A complaint may include at most 3 images.'
+          : 'The upload request is invalid.';
+      return res.status(error.code === 'LIMIT_FILE_SIZE' ? 413 : 400).json({ success: false, message });
+    }
+    if (error && error.statusCode === 400) return res.status(400).json({ success: false, message: error.message });
+    if (error && error.statusCode === 413) return res.status(413).json({ success: false, message: error.message });
     if (error && error.type === 'entity.parse.failed') return res.status(400).json({ success: false, message: 'Request body must contain valid JSON.' });
     if (error && error.name === 'ValidationError') {
       const message = Object.values(error.errors).map((item) => item.message).join(' ');

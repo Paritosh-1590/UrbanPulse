@@ -12,6 +12,7 @@ Protected endpoints require `Authorization: Bearer <JWT>`. The JWT identifies th
 | GET | `/auth/me` | Authenticated | Returns current user |
 | POST | `/ai/classify` | Citizen | Calls Flask model or keyword fallback |
 | POST | `/complaints` | Citizen | Validates and persists complaint |
+| GET | `/complaints/:id/images/:imageId` | Authenticated | Serves evidence only after the existing complaint ownership/department check |
 | GET | `/complaints` | Authenticated | Citizens see their own; officials see their department; admins see all |
 | GET | `/complaints/summary` | Authenticated | Counts visible complaints |
 | GET | `/complaints/:id` | Authenticated | Returns record and activity history after permission check |
@@ -26,6 +27,8 @@ Protected endpoints require `Authorization: Bearer <JWT>`. The JWT identifies th
 ## Complaint fields
 
 Complaint documents include `complaintId`, `title`, `description`, `category`, `location`, `citizen`, `assignedDepartment`, `assignedTo`, `status`, `priority`, `slaDeadline`, `isEscalated`, `escalatedAt`, timestamps and `history`.
+
+`POST /api/complaints` accepts existing JSON or `multipart/form-data`. Multipart submissions may repeat files in the `images` field. Maximum: 3 JPEG/PNG/WebP files, 5 MB each. The server validates signatures and stores binary evidence under `UPLOAD_DIR`; MongoDB stores opaque keys and image metadata. Protected evidence is fetched by the frontend with bearer authentication.
 
 Categories: `Roads`, `Sanitation`, `Water`, `Electricity`, `Drainage`, `Other`. Statuses: `Submitted`, `Assigned`, `In Progress`, `Resolved`, `Rejected`.
 
