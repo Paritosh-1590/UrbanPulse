@@ -20,12 +20,37 @@ const complaintImageSchema = new mongoose.Schema({
   uploadedAt: { type: Date, required: true, default: Date.now },
 }, { _id: false });
 
+const pointSchema = new mongoose.Schema({
+  type: {
+    type: String,
+    enum: ['Point'],
+    default: 'Point',
+    required: true,
+  },
+  coordinates: {
+    type: [Number],
+    required: true,
+    validate: {
+      validator: function (coords) {
+        return Array.isArray(coords) &&
+          coords.length === 2 &&
+          typeof coords[0] === 'number' && Number.isFinite(coords[0]) &&
+          typeof coords[1] === 'number' && Number.isFinite(coords[1]) &&
+          coords[0] >= -180 && coords[0] <= 180 &&
+          coords[1] >= -90 && coords[1] <= 90;
+      },
+      message: 'Coordinates must be [longitude, latitude] with longitude between -180 and 180 and latitude between -90 and 90.',
+    },
+  },
+}, { _id: false });
+
 const complaintSchema = new mongoose.Schema({
   complaintId: { type: String, unique: true, index: true },
   title: { type: String, required: true, trim: true, minlength: 5, maxlength: 120 },
   description: { type: String, required: true, trim: true, minlength: 20, maxlength: 2000 },
   category: { type: String, enum: CATEGORIES, required: true },
   location: { type: String, required: true, trim: true, maxlength: 200 },
+  geoLocation: { type: pointSchema, default: null, required: false },
   imageUrl: { type: String, default: null, maxlength: 500 },
   images: { type: [complaintImageSchema], default: [] },
   citizen: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
@@ -42,6 +67,7 @@ const complaintSchema = new mongoose.Schema({
 complaintSchema.index({ createdAt: -1 });
 complaintSchema.index({ status: 1, slaDeadline: 1 });
 complaintSchema.index({ assignedDepartment: 1, status: 1 });
+complaintSchema.index({ geoLocation: '2dsphere' }, { sparse: true });
 
 module.exports = {
   Complaint: mongoose.model('Complaint', complaintSchema),

@@ -17,18 +17,20 @@ UrbanPulse is a full-stack academic prototype for reporting civic infrastructure
 - A Python text-classification service using TF-IDF and Logistic Regression, trained locally from the small synthetic examples in `ml-service/data/training_data.csv`.
 - A transparent Express keyword-classifier fallback when the optional Python service is not running.
 - Secure complaint evidence uploads: up to 3 JPEG, PNG or WebP files per complaint, with local disk storage and authenticated retrieval.
+- Interactive geographic locations and complaint maps: Leaflet and React-Leaflet map picker for citizens to pin coordinates on submission, GeoJSON Point persistence (`geoLocation`) with MongoDB `2dsphere` index, read-only map rendering on complaint details with a no-coordinate fallback, and a filtered administrative complaint map scoped by role and department.
 
 ## Important limitations
 
-This is a college demonstration project, not a live municipal service. The ML examples are synthetic and small. Model confidence is not a validated accuracy score, and no real-world performance claim is made. The classifier can suggest a category; the citizen still chooses the category submitted with a complaint. There is no live municipal integration, email/SMS notification, geocoding, map, password reset, refresh-token rotation, or background SLA worker. Complaint evidence uses local server disk, so deployment requires a persistent volume or object-storage integration. The frontend stores the short-lived access token in `localStorage`; this is acceptable for a classroom prototype but a production deployment should move to secure, HttpOnly cookies and add CSRF controls.
+This is a college demonstration project, not a live municipal service. The ML examples are synthetic and small. Model confidence is not a validated accuracy score, and no real-world performance claim is made. The classifier can suggest a category; the citizen still chooses the category submitted with a complaint. There is no live municipal integration, email/SMS notification, external geocoding service, password reset, refresh-token rotation, or background SLA worker. Map tiles are provided by OpenStreetMap and require client-side internet access; no paid map API key or private geocoding service is used. Browser geolocation is not requested automatically to adhere to `Permissions-Policy: geolocation=()`, keeping pin placement explicit and user-directed. Coordinates remain optional, and existing text-only records are rendered without fabricated coordinates. Complaint evidence uses local server disk, so deployment requires a persistent volume or object-storage integration. The frontend stores the short-lived access token in `localStorage`; this is acceptable for a classroom prototype but a production deployment should move to secure, HttpOnly cookies and add CSRF controls.
 
 ## Technology stack
 
 | Layer | Technology |
 |---|---|
-| Frontend | React 18, Vite, React Router, Lucide |
+| Frontend | React 18, Vite, React Router, Lucide, Leaflet, React-Leaflet |
+| Maps & Tiles | OpenStreetMap raster tiles (standard attribution) |
 | API | Node.js, Express 5 |
-| Database | MongoDB, Mongoose |
+| Database | MongoDB, Mongoose (with GeoJSON 2dsphere indexing) |
 | Authentication | Node `crypto` scrypt password hashing and HMAC-SHA256 JWT signing |
 | AI service | Python, Flask, scikit-learn, TF-IDF, Logistic Regression |
 

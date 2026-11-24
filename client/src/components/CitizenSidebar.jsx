@@ -1,17 +1,51 @@
-import { NavLink, useNavigate } from 'react-router-dom';
-import { Activity, LayoutDashboard, PlusCircle, ClipboardList, LogOut, Users, ShieldCheck } from 'lucide-react';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { Activity, LayoutDashboard, PlusCircle, ClipboardList, LogOut, Users, ShieldCheck, MapPin } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext.jsx';
 
 export default function CitizenSidebar({ admin = false }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const isOfficial = user?.role === 'department_official';
+
   const items = admin
-    ? [{ label: isOfficial ? 'Department queue' : 'Overview', path: '/admin', icon: LayoutDashboard, end: true }]
+    ? [
+        {
+          label: isOfficial ? 'Department queue' : 'Overview',
+          path: '/admin',
+          icon: LayoutDashboard,
+          active:
+            location.pathname === '/admin' ||
+            (location.pathname.startsWith('/admin/complaints') && !location.pathname.startsWith('/admin/map')),
+        },
+        {
+          label: 'Issue Map',
+          path: '/admin/map',
+          icon: MapPin,
+          active: location.pathname === '/admin/map',
+        },
+      ]
     : [
-        { label: 'Dashboard', path: '/citizen', icon: LayoutDashboard, end: true },
-        { label: 'Report an Issue', path: '/citizen/complaints/new', icon: PlusCircle },
-        { label: 'My Complaints', path: '/citizen/complaints', icon: ClipboardList },
+        {
+          label: 'Dashboard',
+          path: '/citizen',
+          icon: LayoutDashboard,
+          active: location.pathname === '/citizen',
+        },
+        {
+          label: 'Report an Issue',
+          path: '/citizen/complaints/new',
+          icon: PlusCircle,
+          active: location.pathname === '/citizen/complaints/new',
+        },
+        {
+          label: 'My Complaints',
+          path: '/citizen/complaints',
+          icon: ClipboardList,
+          active:
+            location.pathname === '/citizen/complaints' ||
+            (location.pathname.startsWith('/citizen/complaints/') && location.pathname !== '/citizen/complaints/new'),
+        },
       ];
 
   function handleLogout() {
@@ -26,8 +60,8 @@ export default function CitizenSidebar({ admin = false }) {
       </NavLink>
       <p className="citizen-sidebar__section-label">{admin ? (isOfficial ? 'DEPARTMENT WORKSPACE' : 'ADMIN WORKSPACE') : 'CITIZEN PORTAL'}</p>
       <nav className="citizen-sidebar__nav" aria-label="Workspace navigation">
-        {items.map(({ label, path, icon: Icon, end }) => (
-          <NavLink key={path} to={path} end={Boolean(end)} className={({ isActive }) => `citizen-sidebar__link${isActive ? ' is-active' : ''}`}>
+        {items.map(({ label, path, icon: Icon, active }) => (
+          <NavLink key={path} to={path} className={`citizen-sidebar__link${active ? ' is-active' : ''}`}>
             <Icon size={19} aria-hidden="true" /><span>{label}</span>
           </NavLink>
         ))}

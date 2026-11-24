@@ -8,6 +8,7 @@ const { inferPriority, slaDays } = require('../services/classifier');
 const { suggestCategory } = require('../services/ml-client');
 const { isOverdue } = require('../services/sla');
 const { canReadComplaint, escapeRegex } = require('../services/access');
+const { validateAndNormalizeCoordinates } = require('../services/location');
 const {
   MAX_FILE_SIZE,
   MAX_FILES,
@@ -45,6 +46,25 @@ function createComplaintsRouter(config) {
     if (!CATEGORIES.includes(category)) return res.status(400).json({ success: false, message: 'Select a valid complaint category.' });
     if (!location || location.length > 200) return res.status(400).json({ success: false, message: 'Enter a location up to 200 characters.' });
 
+    let geoLocation = null;
+    try {
+      if (req.body.geoLocation !== undefined && req.body.geoLocation !== '') {
+        geoLocation = validateAndNormalizeCoordinates(req.body.geoLocation);
+      } else if (
+        req.body.latitude !== undefined &&
+        req.body.longitude !== undefined &&
+        req.body.latitude !== '' &&
+        req.body.longitude !== ''
+      ) {
+        geoLocation = validateAndNormalizeCoordinates({
+          latitude: req.body.latitude,
+          longitude: req.body.longitude,
+        });
+      }
+    } catch (geoError) {
+      return res.status(400).json({ success: false, message: geoError.message });
+    }
+
     const predicted = await suggestCategory(`${title} ${description}`, config);
     const priority = inferPriority(`${title} ${description}`);
     const now = new Date();
@@ -58,6 +78,7 @@ function createComplaintsRouter(config) {
         description,
         category,
         location,
+        geoLocation,
         citizen: req.user._id,
         priority,
         slaDeadline: new Date(now.getTime() + slaDays(category, priority) * 24 * 60 * 60 * 1000),

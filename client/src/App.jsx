@@ -9,6 +9,7 @@ import MyComplaints from './pages/citizen/MyComplaints.jsx';
 import ComplaintDetails from './pages/citizen/ComplaintDetails.jsx';
 import AdminDashboard from './pages/admin/AdminDashboard.jsx';
 import AdminComplaintDetails from './pages/admin/AdminComplaintDetails.jsx';
+import AdminMapPage from './pages/admin/AdminMapPage.jsx';
 import './pages/citizen/citizen.css';
 import './pages/admin/admin.css';
 
@@ -37,6 +38,7 @@ export default function App() {
 
       <Route path="/admin" element={<ProtectedRoute roles={['admin', 'department_official']}><WorkspaceLayout admin /></ProtectedRoute>}>
         <Route index element={<AdminDashboard />} />
+        <Route path="map" element={<AdminMapPage />} />
         <Route path="complaints/:id" element={<AdminComplaintDetails />} />
       </Route>
 

@@ -77,7 +77,18 @@ export default function AdminDashboard() {
   const isAdmin = user?.role === 'admin';
   return (
     <main className="admin-page">
-      <header className="admin-header"><div><p className="citizen-dashboard__eyebrow">{isAdmin ? 'ADMIN WORKSPACE' : 'DEPARTMENT WORKSPACE'}</p><h1>{isAdmin ? 'Complaint overview' : 'Department queue'}</h1><p>{isAdmin ? 'Review incoming issues, assign ownership, and track service deadlines.' : `Complaints assigned to ${user?.department || 'your department'}.`}</p></div>{isAdmin && <button className="citizen-button citizen-button--primary" onClick={() => setShowOfficialForm((value) => !value)}><Users size={17} />Add department user</button>}</header>
+      <header className="admin-header">
+        <div>
+          <p className="citizen-dashboard__eyebrow">{isAdmin ? 'ADMIN WORKSPACE' : 'DEPARTMENT WORKSPACE'}</p>
+          <h1>{isAdmin ? 'Complaint overview' : 'Department queue'}</h1>
+          <p>{isAdmin ? 'Review incoming issues, assign ownership, and track service deadlines.' : `Complaints assigned to ${user?.department || 'your department'}.`}</p>
+        </div>
+        {isAdmin && (
+          <button className="citizen-button citizen-button--primary" onClick={() => setShowOfficialForm((value) => !value)}>
+            <Users size={17} />Add department user
+          </button>
+        )}
+      </header>
 
       {notice && <div className="citizen-alert citizen-alert--success">{notice}</div>}
       {error && <div className="citizen-alert citizen-alert--error" role="alert">{error}</div>}

@@ -19,6 +19,7 @@ Protected endpoints require `Authorization: Bearer <JWT>`. The JWT identifies th
 | GET | `/admin/departments` | Admin/official | Static project department list |
 | GET | `/admin/summary` | Admin/official | Counts queue items and evaluates overdue SLA cases |
 | GET | `/admin/complaints` | Admin/official | Queue with search and filters |
+| GET | `/admin/map-complaints` | Admin/official | Filtered complaints with coordinates for map view (omits citizen PII) |
 | PATCH | `/admin/complaints/:id/assign` | Admin | Sets department and optional official |
 | PATCH | `/admin/complaints/:id/status` | Admin/assigned official | Enforces status transitions and department scope |
 | GET | `/admin/department-officials` | Admin | Lists provisioned staff |
@@ -26,9 +27,11 @@ Protected endpoints require `Authorization: Bearer <JWT>`. The JWT identifies th
 
 ## Complaint fields
 
-Complaint documents include `complaintId`, `title`, `description`, `category`, `location`, `citizen`, `assignedDepartment`, `assignedTo`, `status`, `priority`, `slaDeadline`, `isEscalated`, `escalatedAt`, timestamps and `history`.
+Complaint documents include `complaintId`, `title`, `description`, `category`, `location`, `geoLocation`, `citizen`, `assignedDepartment`, `assignedTo`, `status`, `priority`, `slaDeadline`, `isEscalated`, `escalatedAt`, timestamps and `history`.
 
-`POST /api/complaints` accepts existing JSON or `multipart/form-data`. Multipart submissions may repeat files in the `images` field. Maximum: 3 JPEG/PNG/WebP files, 5 MB each. The server validates signatures and stores binary evidence under `UPLOAD_DIR`; MongoDB stores opaque keys and image metadata. Protected evidence is fetched by the frontend with bearer authentication.
+`geoLocation` is an optional GeoJSON Point field: `{ type: "Point", coordinates: [longitude, latitude] }`. Coordinates must have valid finite values with longitude between -180 and 180 degrees and latitude between -90 and 90 degrees. A sparse `2dsphere` index is maintained in MongoDB. Submissions without coordinates persist with `geoLocation: null`.
+
+`POST /api/complaints` accepts existing JSON or `multipart/form-data`. Geographic coordinates may be supplied via `geoLocation` (GeoJSON object or serialized JSON string) or discrete `latitude` and `longitude` fields. Multipart submissions may repeat files in the `images` field. Maximum: 3 JPEG/PNG/WebP files, 5 MB each. The server validates signatures and stores binary evidence under `UPLOAD_DIR`; MongoDB stores opaque keys and image metadata. Protected evidence is fetched by the frontend with bearer authentication.
 
 Categories: `Roads`, `Sanitation`, `Water`, `Electricity`, `Drainage`, `Other`. Statuses: `Submitted`, `Assigned`, `In Progress`, `Resolved`, `Rejected`.
 

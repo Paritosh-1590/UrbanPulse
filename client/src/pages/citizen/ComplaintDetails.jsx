@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, MapPin, CalendarDays, Clock3, FileText, CheckCircle2, Circle, AlertTriangle } from 'lucide-react';
 import StatusBadge from '../../components/StatusBadge.jsx';
 import ComplaintEvidence from '../../components/ComplaintEvidence.jsx';
+import ComplaintLocationMap from '../../components/map/ComplaintLocationMap.jsx';
 import { apiRequest } from '../../lib/api.js';
 
 const formatDate = (value) => value ? new Date(value).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
@@ -38,6 +39,11 @@ export default function ComplaintDetails() {
           <div className="citizen-detail-item"><CalendarDays size={19} /><div><span>Date submitted</span><strong>{formatDate(complaint.createdAt)}</strong></div></div>
           {complaint.assignedDepartment && <div className="citizen-detail-item"><FileText size={19} /><div><span>Assigned department</span><strong>{complaint.assignedDepartment}</strong></div></div>}
           <div className="citizen-details-description"><h3>Description</h3><p>{complaint.description}</p></div>
+          <ComplaintLocationMap
+            geoLocation={complaint.geoLocation}
+            location={complaint.location}
+            title={complaint.title}
+          />
         </section>
         <aside className="citizen-form-card citizen-sla-card"><div className="citizen-form-card__heading"><h2>Resolution target</h2><p>Deadline set at submission</p></div><div className="citizen-sla-card__deadline"><Clock3 size={21} /><div><span>Target deadline</span><strong>{formatDate(complaint.slaDeadline)}</strong></div></div><p className="citizen-form-hint">Priority: <strong>{complaint.priority}</strong>. The deadline is a project rule, not a guarantee from a municipal authority.</p></aside>
       </div>

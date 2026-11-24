@@ -48,6 +48,26 @@ function createAdminRouter() {
     return res.json({ success: true, data: { items: items.map((item) => ({ ...item, isOverdue: isOverdue(item) })), pagination: { page, limit, total, pages: Math.ceil(total / limit) } } });
   });
 
+  router.get('/map-complaints', async (req, res) => {
+    await applySlaEscalations();
+    const filter = buildAdminComplaintFilter(req.user, req.query);
+    filter.geoLocation = { $ne: null };
+    filter['geoLocation.coordinates'] = { $exists: true, $ne: [] };
+
+    const items = await Complaint.find(filter)
+      .select('complaintId title category status priority location geoLocation assignedDepartment slaDeadline isEscalated createdAt')
+      .sort({ isEscalated: -1, createdAt: -1 })
+      .limit(500)
+      .lean();
+
+    return res.json({
+      success: true,
+      data: {
+        items: items.map((item) => ({ ...item, isOverdue: isOverdue(item) })),
+      },
+    });
+  });
+
   router.patch('/complaints/:id/assign', async (req, res) => {
     if (req.user.role !== 'admin') return res.status(403).json({ success: false, message: 'Only administrators can assign complaints.' });
     if (!DEPARTMENTS.includes(req.body.department)) return res.status(400).json({ success: false, message: 'Choose a valid department.' });
