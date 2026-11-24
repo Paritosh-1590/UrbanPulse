@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Send, MapPin, Sparkles, ImagePlus, X } from 'lucide-react';
+import ComplaintLocationPicker from '../../components/map/ComplaintLocationPicker.jsx';
 import { apiRequest } from '../../lib/api.js';
 
 const initialForm = { title: '', category: '', description: '', location: '' };
@@ -18,6 +19,7 @@ export default function NewComplaint() {
   const [submitting, setSubmitting] = useState(false);
   const [images, setImages] = useState([]);
   const [imageError, setImageError] = useState('');
+  const [coordinates, setCoordinates] = useState(null);
   const imagesRef = useRef([]);
   const navigate = useNavigate();
 
@@ -98,6 +100,9 @@ export default function NewComplaint() {
     try {
       const body = new FormData();
       Object.entries(form).forEach(([key, value]) => body.append(key, value));
+      if (coordinates) {
+        body.append('geoLocation', JSON.stringify({ type: 'Point', coordinates }));
+      }
       images.forEach((image) => body.append('images', image.file));
       const result = await apiRequest('/complaints', { method: 'POST', body });
       navigate(`/citizen/complaints/${result.complaint.complaintId}`, { state: { created: true } });
@@ -118,6 +123,13 @@ export default function NewComplaint() {
         </div>
         <div className="citizen-form-field"><label htmlFor="description">Description *</label><textarea id="description" name="description" value={form.description} onChange={handleChange} placeholder="Describe the issue, when it started, and how it affects your area…" rows={5} maxLength={2000} aria-invalid={Boolean(errors.description)} /><p className="citizen-form-hint">{form.description.length}/2000 characters · At least 20 characters</p>{errors.description && <p className="citizen-form-error">{errors.description}</p>}</div>
         <div className="citizen-form-field"><label htmlFor="location"><MapPin size={15} /> Issue location *</label><input id="location" name="location" value={form.location} onChange={handleChange} placeholder="Street, area, or landmark" maxLength={200} aria-invalid={Boolean(errors.location)} />{errors.location && <p className="citizen-form-error">{errors.location}</p>}</div>
+        <div className="citizen-form-field">
+          <ComplaintLocationPicker
+            value={coordinates}
+            onChange={setCoordinates}
+            label="Pin location on map (optional)"
+          />
+        </div>
         <div className="citizen-form-field">
           <label htmlFor="evidence">Evidence images (optional)</label>
           <p className="citizen-form-hint">Add up to 3 JPEG, PNG or WebP images, 5 MB each.</p>

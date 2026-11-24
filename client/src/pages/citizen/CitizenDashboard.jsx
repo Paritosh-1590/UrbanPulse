@@ -48,7 +48,7 @@ export default function CitizenDashboard() {
             <div className="citizen-complaint-row__details"><h3>{complaint.title}</h3><p>{complaint.complaintId} · {complaint.category}</p><p className="citizen-complaint-row__location"><MapPin size={14} />{complaint.location} · {formatDate(complaint.createdAt)}</p></div>
             <div className="citizen-complaint-row__status"><StatusBadge status={complaint.status} /><Link to={`/citizen/complaints/${complaint.complaintId}`} className="citizen-text-link">Details <ArrowRight size={15} /></Link></div>
           </article>)}
-        </div> : <div className="citizen-empty-state"><ClipboardList size={34} /><h2>No complaints yet</h2><p>Start by reporting a civic issue in your area.</p><Link className="citizen-button citizen-button--primary" to="/citizen/complaints/new">Report an issue</Link></div>}
+        </div> : <div className="citizen-empty-state"><ClipboardList size={34} /><h2>No complaints yet</h2><p>Start by reporting a civic issue in your area.</p></div>}
       </section>
     </main>
   );
